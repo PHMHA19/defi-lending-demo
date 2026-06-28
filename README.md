@@ -153,10 +153,39 @@ Quá trình sử dụng hệ thống diễn ra theo các bước sau:
 | Blockchain | Ethereum Sepolia Testnet | - |
 | Wallet | MetaMask | - |
 
-> Nếu chưa cài Yarn:
+---
+
+## Cài đặt môi trường
+
+### 1. Cài Node.js (bao gồm npm)
+
+Tải tại:
+
+https://nodejs.org/
+
+Sau khi cài đặt, kiểm tra:
+
+```bash
+node -v
+npm -v
+```
+
+### 2. Cài Yarn (nếu chưa có)
 
 ```bash
 npm install -g yarn
+```
+
+Kiểm tra:
+
+```bash
+yarn -v
+```
+
+### 3. Kiểm tra Git
+
+```bash
+git --version
 ```
 
 ---
