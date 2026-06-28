@@ -36,7 +36,7 @@
 ```bash
 git clone https://github.com/PHMHA19/defi-lending-demo.git
 
-cd defi-lending-demo
+cd defi-lending-aave-main
 
 yarn install
 
