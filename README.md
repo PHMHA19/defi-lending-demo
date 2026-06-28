@@ -335,6 +335,24 @@ Người dùng cần nhận ETH testnet từ Faucet trước khi thực hiện g
 
 ---
 
+## Tự deploy Smart Contract
+
+Để tự deploy dự án lên Sepolia hoặc mạng khác, cần tạo file:
+
+```text
+packages/hardhat/.env
+```
+
+và cấu hình các biến môi trường cần thiết:
+
+```env
+ALCHEMY_API_KEY=your_alchemy_api_key
+ETHERSCAN_API_KEY=your_etherscan_api_key
+__RUNTIME_DEPLOYER_PRIVATE_KEY=your_wallet_private_key
+```
+
+Sau đó có thể compile và deploy bằng Hardhat.
+
 # Tác giả
 
 **PHMHA19**
