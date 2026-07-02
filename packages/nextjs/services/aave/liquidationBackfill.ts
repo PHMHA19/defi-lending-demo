@@ -10,6 +10,7 @@ import { syncLiquidationCandidates } from "./liquidationSync";
 const WATCHLIST_TABLE = "liquidation_watchlist";
 const SYNC_STATE_TABLE = "liquidation_sync_state";
 const DEFAULT_CHAIN_ID = 11155111;
+const MAX_BLOCKS_PER_REQUEST = 1000n;
 
 function resolveChainId(chainId?: number) {
   return Number.isFinite(chainId ?? NaN) ? (chainId as number) : DEFAULT_CHAIN_ID;
@@ -76,6 +77,36 @@ async function saveLastScannedBlock(chainId: number, blockNumber: bigint) {
   }
 }
 
+async function getContractEventsInChunks(
+  publicClient: ReturnType<typeof createPublicClient>,
+  poolAddress: Address,
+  eventName: "Borrow" | "Repay" | "LiquidationCall",
+  fromBlock: bigint,
+  toBlock: bigint,
+) {
+  const events: Array<Record<string, any>> = [];
+
+  let batchStart = fromBlock;
+
+  while (batchStart <= toBlock) {
+    const batchEnd = batchStart + MAX_BLOCKS_PER_REQUEST - 1n;
+    const currentToBlock = batchEnd < toBlock ? batchEnd : toBlock;
+
+    const batchEvents = await publicClient.getContractEvents({
+      address: poolAddress,
+      abi: poolEventsAbi,
+      eventName,
+      fromBlock: batchStart,
+      toBlock: currentToBlock,
+    });
+
+    events.push(...batchEvents);
+    batchStart = currentToBlock + 1n;
+  }
+
+  return events;
+}
+
 function resolveSupportedChainId(
     chainId?: number,
     ): 11155111 | 1 {
@@ -119,38 +150,38 @@ const publicClient = createPublicClient({
   };
 
   // Backfill borrower lịch sử: Borrow, Repay, LiquidationCall
-  const borrowEvents = await publicClient.getContractEvents({
-    address: poolAddress,
-    abi: poolEventsAbi,
-    eventName: "Borrow",
-    fromBlock: startBlock,
-    toBlock: latestBlock,
-  });
+  const borrowEvents = await getContractEventsInChunks(
+    publicClient,
+    poolAddress,
+    "Borrow",
+    startBlock,
+    latestBlock,
+  );
 
   for (const event of borrowEvents) {
     addAddress(event.args.onBehalfOf);
     addAddress(event.args.user);
   }
 
-  const repayEvents = await publicClient.getContractEvents({
-    address: poolAddress,
-    abi: poolEventsAbi,
-    eventName: "Repay",
-    fromBlock: startBlock,
-    toBlock: latestBlock,
-  });
+  const repayEvents = await getContractEventsInChunks(
+    publicClient,
+    poolAddress,
+    "Repay",
+    startBlock,
+    latestBlock,
+  );
 
   for (const event of repayEvents) {
     addAddress(event.args.user);
   }
 
-  const liquidationEvents = await publicClient.getContractEvents({
-    address: poolAddress,
-    abi: poolEventsAbi,
-    eventName: "LiquidationCall",
-    fromBlock: startBlock,
-    toBlock: latestBlock,
-  });
+  const liquidationEvents = await getContractEventsInChunks(
+    publicClient,
+    poolAddress,
+    "LiquidationCall",
+    startBlock,
+    latestBlock,
+  );
 
   for (const event of liquidationEvents) {
     addAddress(event.args.user);
